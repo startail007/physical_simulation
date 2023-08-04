@@ -14,6 +14,9 @@ class VerletObject {
     this.radius = radius;
     this.lock = false;
     this.color = color;
+    // this.v = [0, 0];
+    // this.force = [0, 0];
+    // this.mass = 1;
   }
   draw() {
     ctx.fillStyle = this.color;
@@ -25,8 +28,10 @@ class VerletObject {
     const vel = Vector.sub(this.pos_current, this.pos_old);
     this.pos_old = this.pos_current;
     if (!this.lock) {
+      // this.v = Vector.add(this.v, Vector.scale(this.acc, dt * dt));
       this.pos_current = Vector.add(Vector.add(this.pos_current, vel), Vector.scale(this.acc, dt * dt));
     }
+    // console.log(this.force);
     this.acc = [0, 0];
   }
   accelerate(acc) {
@@ -59,6 +64,7 @@ class Solver {
     this.links = [];
     this.pos = [400, 300];
     this.radius = 300;
+    this.rect = [50, 50, 700, 500];
   }
   update(dt) {
     const sub_steps = 6;
@@ -91,15 +97,18 @@ class Solver {
           const delta = min_dist - dist;
           //console.log(delta);
           if (!a.lock) {
+            //a.pos_old = a.pos_current;
             a.pos_current = Vector.add(a.pos_current, Vector.scale(n, 0.5 * delta));
           }
           if (!b.lock) {
+            //b.pos_old = b.pos_current;
             b.pos_current = Vector.sub(b.pos_current, Vector.scale(n, 0.5 * delta));
           }
         }
       }
     }
   }
+
   solverConstraint() {
     this.particles.forEach((el) => {
       const to_obj = Vector.sub(el.pos_current, this.pos);
@@ -110,6 +119,22 @@ class Solver {
           el.pos_current = Vector.add(this.pos, Vector.scale(n, this.radius - el.radius));
         }
       }
+      /*if (el.pos_current[0] - el.radius - this.rect[0] < 0) {
+        el.pos_old[0] = el.pos_current[0];
+        el.pos_current[0] = this.rect[0] + el.radius;
+      }
+      if (el.pos_current[0] + el.radius - (this.rect[0] + this.rect[2]) > 0) {
+        el.pos_old[0] = el.pos_current[0];
+        el.pos_current[0] = this.rect[0] + this.rect[2] - el.radius;
+      }
+      if (el.pos_current[1] - el.radius - this.rect[1] < 0) {
+        el.pos_old[1] = el.pos_current[1];
+        el.pos_current[1] = this.rect[1] + el.radius;
+      }
+      if (el.pos_current[1] + el.radius - (this.rect[1] + this.rect[3]) > 0) {
+        el.pos_old[1] = el.pos_current[1];
+        el.pos_current[1] = this.rect[1] + this.rect[3] - el.radius;
+      }*/
     });
   }
   solverLinks() {
@@ -120,11 +145,15 @@ class Solver {
     ctx.beginPath();
     ctx.arc(...this.pos, this.radius, 0, 2 * Math.PI);
     ctx.fill();
+    /*ctx.fillStyle = "#444444";
+    ctx.beginPath();
+    ctx.rect(...this.rect);
+    ctx.fill();*/
     this.particles.forEach((el) => el.draw());
   }
 }
 const solver = new Solver();
-const line = [];
+/*const line = [];
 for (let i = 0; i < 20; i++) {
   const particle = new VerletObject(210 + i * 20, 300, 10, "#ffffff");
   line.push(particle);
@@ -135,18 +164,16 @@ for (let i = 0; i < line.length - 1; i++) {
   solver.links.push(link);
 }
 line[0].lock = true;
-// line[9].lock = true;
-line[19].lock = true;
-// setTimeout(() => {
-//   line[19].lock = false;
-// }, 10000);
-setInterval(() => {
+line[19].lock = true;*/
+/*setInterval(() => {
   if (solver.particles.length < 150) {
-    const particle = new VerletObject(400, 50, 5 + Math.random() * 10, "#ff0000");
-    particle.accelerate([0, 500000]);
+    const particle = new VerletObject(400 + Math.random(), 100, 5 + Math.random() * 10, "#ff0000");
+    //particle.accelerate([500000, 0]);
     solver.particles.push(particle);
   }
-}, 100);
+}, 300);*/
+solver.particles.push(new VerletObject(600, 200, 20, "#ff0000"));
+solver.particles.push(new VerletObject(200, 200, 20, "#ff0000"));
 
 const update = (dt) => {
   ctx.fillStyle = "#000000";
