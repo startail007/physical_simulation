@@ -10,15 +10,14 @@ class VerletObject {
   constructor(x, y, radius, color) {
     this.pos_current = [x, y];
     this.pos_old = [x, y];
-    this.move = [0, 0];
     this.acc = [0, 0];
     this.radius = radius;
     this.lock = false;
     this.color = color;
-    this.vel = [0, 0];
     // this.v = [0, 0];
-    // this.force = [0, 0];
-    // this.mass = 1;
+    //this.force = [0, 0];
+    this.mass = 1;
+    this.vel = [0, 0];
   }
   draw() {
     //ctx.fillStyle = this.color;
@@ -31,19 +30,19 @@ class VerletObject {
     ctx.strokeStyle = "#00ff00";
     ctx.beginPath();
     ctx.moveTo(...this.pos_current);
-    ctx.lineTo(...Vector.add(this.pos_current, Vector.scale(this.vel, 20)));
+    ctx.lineTo(...Vector.add(this.pos_current, Vector.scale(this.vel, 0.1)));
     ctx.stroke();
   }
   updatePos(dt) {
-    const vel = Vector.sub(this.pos_current, this.pos_old);
+    let vel = Vector.sub(this.pos_current, this.pos_old);
+    //const acc = Vector.scale(Vector.sub(this.vel_old, vel), 1 / dt);
+    //this.vel_old = vel;
     this.pos_old = this.pos_current;
     if (!this.lock) {
-      // this.v = Vector.add(this.v, Vector.scale(this.acc, dt * dt));
-      this.move = Vector.add(this.move, Vector.add(vel, Vector.scale(this.acc, dt * dt)));
-      this.vel = this.move;
       //this.pos_current = Vector.add(Vector.add(this.pos_current, vel), Vector.scale(this.acc, dt * dt));
-      this.pos_current = Vector.add(this.pos_current, this.move);
-      this.move = [0, 0];
+      this.vel = Vector.add(this.vel, Vector.scale(this.acc, dt));
+      //console.log(this.vel);
+      this.pos_current = Vector.add(this.pos_current, Vector.scale(this.vel, dt));
     }
     // console.log(this.force);
     this.acc = [0, 0];
@@ -63,20 +62,13 @@ class Link {
     const dist = Vector.length(axis);
     const n = Vector.scale(axis, 1 / dist);
     const delta = this.target_dist - dist;
-    const a = Math.min(Math.abs(delta / 60), 5);
     if (!this.A.lock) {
-      //if (Math.abs(delta) > 10) {
+      this.A.vel = Vector.add(this.A.vel, Vector.scale(n, 0.5 * delta));
       this.A.pos_current = Vector.add(this.A.pos_current, Vector.scale(n, 0.5 * delta));
-      /*} else {
-        this.A.move = Vector.add(this.A.move, Vector.scale(n, 0.5 * delta * a));
-      }*/
     }
     if (!this.B.lock) {
-      //if (Math.abs(delta) > 10) {
+      this.B.vel = Vector.sub(this.B.vel, Vector.scale(n, 0.5 * delta));
       this.B.pos_current = Vector.sub(this.B.pos_current, Vector.scale(n, 0.5 * delta));
-      /*} else {
-        this.B.move = Vector.sub(this.B.move, Vector.scale(n, 0.5 * delta * a));
-      }*/
     }
   }
 }
@@ -85,9 +77,9 @@ class Solver {
     this.gravity = [0, 1000];
     this.particles = [];
     this.links = [];
-    this.pos = [400, 400];
+    this.pos = [400, 300];
     this.radius = 300;
-    this.rect = [50, 50, 700, 600];
+    this.rect = [50, 50, 700, 500];
   }
   update(dt) {
     const sub_steps = 6;
@@ -118,16 +110,26 @@ class Solver {
         if (dist < min_dist) {
           const n = Vector.scale(collision_axis, 1 / dist);
           const delta = min_dist - dist;
-          //console.log(delta);
+
+          const force1 = Vector.projection(a.vel, n);
+          const force2 = Vector.projection(b.vel, n);
+          const v1 = Vector.collisionCalc(force1, force2, a.mass, b.mass);
+          const v2 = Vector.collisionCalc(force2, force1, b.mass, a.mass);
+
+          //console.log(v1);
           if (!a.lock) {
             //a.pos_old = a.pos_current;
+            a.vel = Vector.sub(a.vel, force1);
+            a.vel = Vector.add(a.vel, Vector.scale(v1, 0.8));
+            a.vel = Vector.add(a.vel, Vector.scale(n, 0.5 * delta * delta));
             a.pos_current = Vector.add(a.pos_current, Vector.scale(n, 0.5 * delta));
-            a.move = Vector.add(a.move, Vector.scale(n, 0.5 * delta));
           }
           if (!b.lock) {
             //b.pos_old = b.pos_current;
+            b.vel = Vector.sub(b.vel, force2);
+            b.vel = Vector.add(b.vel, Vector.scale(v2, 0.8));
+            b.vel = Vector.sub(b.vel, Vector.scale(n, 0.5 * delta * delta));
             b.pos_current = Vector.sub(b.pos_current, Vector.scale(n, 0.5 * delta));
-            b.move = Vector.sub(b.move, Vector.scale(n, 0.5 * delta));
           }
         }
       }
@@ -139,26 +141,33 @@ class Solver {
       const to_obj = Vector.sub(el.pos_current, this.pos);
       const dist = Vector.length(to_obj);
       if (dist > this.radius - el.radius) {
-        const n = Vector.scale(to_obj, 1 / dist);
         if (!el.lock) {
+          const n = Vector.scale(to_obj, 1 / dist);
+          const force1 = Vector.projection(el.vel, n);
+          el.vel = Vector.sub(el.vel, force1);
+          el.vel = Vector.add(el.vel, Vector.scale(force1, -1 * 0.8));
           el.pos_current = Vector.add(this.pos, Vector.scale(n, this.radius - el.radius));
         }
       }
       /*if (el.pos_current[0] - el.radius - this.rect[0] < 0) {
-        el.pos_old[0] = el.pos_current[0];
+        //el.pos_old[0] = el.pos_current[0];
         el.pos_current[0] = this.rect[0] + el.radius;
+        el.vel[0] = -el.vel[0];
       }
       if (el.pos_current[0] + el.radius - (this.rect[0] + this.rect[2]) > 0) {
-        el.pos_old[0] = el.pos_current[0];
+        //el.pos_old[0] = el.pos_current[0];
         el.pos_current[0] = this.rect[0] + this.rect[2] - el.radius;
+        el.vel[0] = -el.vel[0];
       }
       if (el.pos_current[1] - el.radius - this.rect[1] < 0) {
-        el.pos_old[1] = el.pos_current[1];
+        //el.pos_old[1] = el.pos_current[1];
         el.pos_current[1] = this.rect[1] + el.radius;
+        el.vel[1] = -el.vel[1];
       }
       if (el.pos_current[1] + el.radius - (this.rect[1] + this.rect[3]) > 0) {
-        el.pos_old[1] = el.pos_current[1];
+        //el.pos_old[1] = el.pos_current[1];
         el.pos_current[1] = this.rect[1] + this.rect[3] - el.radius;
+        el.vel[1] = -el.vel[1];
       }*/
     });
   }
@@ -178,33 +187,35 @@ class Solver {
   }
 }
 const solver = new Solver();
-const line = [];
-for (let i = 0; i < 20; i++) {
-  const particle = new VerletObject(210 + i * 20, 300, 10, "#ffffff");
-  line.push(particle);
-  solver.particles.push(particle);
-}
-for (let i = 0; i < line.length - 1; i++) {
-  const link = new Link(line[i], line[i + 1], 20);
-  solver.links.push(link);
-}
-line[0].lock = true;
-line[19].lock = true;
-// setTimeout(() => {
-//   line[19].lock = false;
-// }, 10000);
-// setInterval(() => {
-//   if (solver.particles.length < 150) {
-//     const particle = new VerletObject(400, 200, 5 + Math.random() * 10, "#ff0000");
-//     particle.accelerate([50000, 0]);
-//     //particle.accelerate([0, 100000]);
-//     solver.particles.push(particle);
-//   }
-// }, 200);
-// solver.particles.push(new VerletObject(600, 300, 20, "#ff0000"));
-// solver.particles.push(new VerletObject(200, 300, 20, "#ffff00"));
-// solver.particles.push(new VerletObject(400, 680, 20, "#00ff00"));
-// solver.particles.push(new VerletObject(400, 200, 20, "#0000ff"));
+// const line = [];
+// for (let i = 0; i < 20; i++) {
+//   const particle = new VerletObject(210 + i * 20, 300, 10, "#ffffff");
+//   line.push(particle);
+//   solver.particles.push(particle);
+// }
+// for (let i = 0; i < line.length - 1; i++) {
+//   const link = new Link(line[i], line[i + 1], 20);
+//   solver.links.push(link);
+// }
+// line[0].lock = true;
+// line[19].lock = true;
+setInterval(() => {
+  if (solver.particles.length < 150) {
+    const particle = new VerletObject(650, 200, 20, "#ff0000");
+    //particle.accelerate([500000, 0]);
+    solver.particles.push(particle);
+  }
+}, 200);
+// {
+//   const particle = new VerletObject(650, 200, 20, "#ff0000");
+//   //particle.accelerate([100000, 0]);
+//   solver.particles.push(particle);
+// }
+// {
+//   const particle = new VerletObject(150, 200, 20, "#ff0000");
+//   //particle.accelerate([-100000, 0]);
+//   solver.particles.push(particle);
+// }
 
 const update = (dt) => {
   ctx.fillStyle = "#000000";
