@@ -149,6 +149,25 @@ const update = (dt) => {
       rigid_body.apply_force([0, 98]);
       //console.log(rigid_body.force);
     }
+    for (let i = 0; i < rigid_bodys.length; i++) {
+      const rigid_body = rigid_bodys[i];
+      const to_obj = Vector.sub(rigid_body.position, [400, 300]);
+      const dist = Vector.length(to_obj);
+      if (dist > 300 - 20) {
+        const n = Vector.scale(to_obj, 1 / dist);
+        const force1 = Vector.projection(rigid_body.velocity, n);
+        const fv01 = Vector.sub(rigid_body.velocity, force1)
+        // const f01 = getForce(
+        //   rigid_body.static_friction_coefficient,
+        //   rigid_body.dynamic_friction_coefficient,
+        //   fv01,
+        //   sub_dt
+        // );
+        // rigid_body.apply_force(f01);
+        rigid_body.velocity = Vector.add(fv01, Vector.scale(force1, -0.9));
+        rigid_body.position = Vector.add([400, 300], Vector.scale(n, 300 - 20));
+      }
+    }
     for (let i = 0; i < rigid_bodys.length - 1; i++) {
       for (let j = i + 1; j < rigid_bodys.length; j++) {
         const rigid_body01 = rigid_bodys[i];
@@ -165,32 +184,30 @@ const update = (dt) => {
           const fv01 = Vector.sub(rigid_body01.velocity, force1);
           const fv02 = Vector.sub(rigid_body02.velocity, force2);
 
-          rigid_body01.velocity = fv01;
 
-          const f01 = getForce(
-            rigid_body01.static_friction_coefficient + rigid_body02.static_friction_coefficient,
-            rigid_body01.dynamic_friction_coefficient + rigid_body02.dynamic_friction_coefficient,
-            Vector.sub(fv01, fv02),
-            dt
-          );
-          //console.log(f01);
-          rigid_body01.apply_force(f01);
-          VectorE.add(rigid_body01.velocity, Vector.scale(v1, 0.8));
+          // const f01 = getForce(
+          //   rigid_body01.static_friction_coefficient + rigid_body02.static_friction_coefficient,
+          //   rigid_body01.dynamic_friction_coefficient + rigid_body02.dynamic_friction_coefficient,
+          //   Vector.sub(fv01, fv02),
+          //   dt
+          // );
+          // rigid_body01.apply_force(f01);
+          rigid_body01.velocity = Vector.add(fv01, Vector.scale(v1, 0.9));
+          //rigid_body01.velocity = Vector.add(fv01, v1);
 
-          rigid_body02.velocity = fv02;
-          const f02 = getForce(
-            rigid_body01.static_friction_coefficient + rigid_body02.static_friction_coefficient,
-            rigid_body01.dynamic_friction_coefficient + rigid_body02.dynamic_friction_coefficient,
-            Vector.sub(fv02, fv01),
-            dt
-          );
-          //console.log(f02);
-          rigid_body02.apply_force(f02);
-          VectorE.add(rigid_body02.velocity, Vector.scale(v2, 0.8));
+          // const f02 = getForce(
+          //   rigid_body01.static_friction_coefficient + rigid_body02.static_friction_coefficient,
+          //   rigid_body01.dynamic_friction_coefficient + rigid_body02.dynamic_friction_coefficient,
+          //   Vector.sub(fv02, fv01),
+          //   dt
+          // );
+          // rigid_body02.apply_force(f02);
+          rigid_body02.velocity = Vector.add(fv02, Vector.scale(v2, 0.9));
+          //rigid_body02.velocity = Vector.add(fv02, v2);
 
           const delta = 40 - dist;
-          VectorE.add(rigid_body01.velocity, Vector.scale(n, 0.5 * delta));
-          VectorE.add(rigid_body02.velocity, Vector.scale(n, -0.5 * delta));
+          //VectorE.add(rigid_body01.velocity, Vector.scale(n, 0.5 * delta));
+          //VectorE.add(rigid_body02.velocity, Vector.scale(n, -0.5 * delta));
           VectorE.add(rigid_body01.position, Vector.scale(n, 0.5 * delta));
           VectorE.add(rigid_body02.position, Vector.scale(n, -0.5 * delta));
         }
@@ -215,34 +232,6 @@ const update = (dt) => {
     for (let i = 0; i < rigid_bodys.length; i++) {
       const rigid_body = rigid_bodys[i];
       rigid_body.update(sub_dt);
-    }
-    for (let i = 0; i < rigid_bodys.length; i++) {
-      const rigid_body = rigid_bodys[i];
-      const to_obj = Vector.sub(rigid_body.position, [400, 300]);
-      const dist = Vector.length(to_obj);
-      if (dist > 300 - 20) {
-        const n = Vector.scale(to_obj, 1 / dist);
-        const force1 = Vector.projection(rigid_body.velocity, n);
-        rigid_body.velocity = Vector.sub(rigid_body.velocity, force1);
-        rigid_body.velocity = Vector.add(rigid_body.velocity, Vector.scale(force1, -0.8));
-        rigid_body.position = Vector.add([400, 300], Vector.scale(n, 300 - 20));
-      }
-      /*if (rigid_body.position[0] + 20 > 800) {
-        rigid_body.position[0] = 800 - 20;
-        rigid_body.velocity[0] *= -0.98;
-      }
-      if (rigid_body.position[0] - 20 < 0) {
-        rigid_body.position[0] = 20;
-        rigid_body.velocity[0] *= -0.98;
-      }
-      if (rigid_body.position[1] + 20 > 600) {
-        rigid_body.position[1] = 600 - 20;
-        rigid_body.velocity[1] *= -0.98;
-      }
-      if (rigid_body.position[1] - 20 < 0) {
-        rigid_body.position[1] = 20;
-        rigid_body.velocity[1] *= -0.98;
-      }*/
     }
   }
   for (let i = 0; i < rigid_bodys.length; i++) {
