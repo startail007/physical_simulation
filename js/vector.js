@@ -22,6 +22,9 @@ class Vector {
   static div(vector0, vector1) {
     return [vector0[0] / vector1[0], vector0[1] / vector1[1]];
   }
+  static distance(vector0, vector1) {
+    return Vector.length(Vector.sub(vector0, vector1));
+  }
   static projection(vector0, vector1) {
     var rate = Vector.dot(vector0, vector1) / Vector.dot(vector1, vector1);
     return [vector1[0] * rate, vector1[1] * rate];
@@ -40,6 +43,11 @@ class Vector {
   }
 }
 class VectorE {
+  static set(vector0, vector1) {
+    vector0[0] = vector1[0];
+    vector0[1] = vector1[1];
+    return vector0;
+  }
   static add(vector0, vector1) {
     vector0[0] += vector1[0];
     vector0[1] += vector1[1];
