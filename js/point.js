@@ -1,33 +1,31 @@
-import { Vector } from "./vector.js";
-class Point {
-  static toPosRate(pos0, pos1, rate) {
-    return [pos0[0] * (1 - rate) + pos1[0] * rate, pos0[1] * (1 - rate) + pos1[1] * rate];
+import { Vector, VectorE } from "./vector.js";
+export default class Point {
+  constructor(x, y, mass, pinned = false) {
+    this.pos = [x, y];
+    this.pos_old = [x, y];
+    this.acc = [0, 0];
+    this.pinned = pinned;
+    this.color = "#ff0000";
+    this.mass = mass;
   }
-  static cross(pos0, pos1, pos2) {
-    return (pos0[0] - pos1[0]) * (pos2[1] - pos1[1]) - (pos2[0] - pos1[0]) * (pos0[1] - pos1[1]);
+  render(ctx) {
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(...this.pos, 5, 0, 2 * Math.PI);
+    ctx.fill();
   }
-  static getCenter(pos0, pos1) {
-    return [(pos0[0] + pos1[0]) * 0.5, (pos0[1] + pos1[1]) * 0.5];
+  update(dt) {
+    const vel = this.vel;
+    VectorE.set(this.pos_old, this.pos);
+    if (!this.pinned) {
+      VectorE.add(this.pos, Vector.add(vel, Vector.scale(this.acc, dt * dt)));
+    }
+    VectorE.set(this.acc, [0, 0]);
   }
-  static getVector(pos0, pos1) {
-    return [pos1[0] - pos0[0], pos1[1] - pos0[1]];
+  accelerate(acc) {
+    VectorE.add(this.acc, Vector.scale(acc, 1 / this.mass));
   }
-  static addVector(pos, vector) {
-    return [pos[0] + vector[0], pos[1] + vector[1]];
-  }
-  static distance(pos0, pos1) {
-    return Vector.length(Point.getVector(pos0, pos1));
+  get vel() {
+    return Vector.sub(this.pos, this.pos_old);
   }
 }
-
-const getQuadraticCurveTo = function (p0, p1, p2, t) {
-  const x = p0[0] * (1 - t) * (1 - t) + 2 * p1[0] * (1 - t) * t + p2[0] * t * t;
-  const y = p0[1] * (1 - t) * (1 - t) + 2 * p1[1] * (1 - t) * t + p2[1] * t * t;
-  return [x, y];
-};
-const getQuadraticCurveToTangent = function (p0, p1, p2, t) {
-  const x = 2 * t * (p0[0] - p1[0] * 2 + p2[0]) + 2 * (-p0[0] + p1[0]);
-  const y = 2 * t * (p0[1] - p1[1] * 2 + p2[1]) + 2 * (-p0[1] + p1[1]);
-  return [x, y];
-};
-export { getQuadraticCurveTo, getQuadraticCurveToTangent, Point };
