@@ -1,6 +1,7 @@
 import { Vector } from "./vector.js";
 export default class Solver {
   static constraintRect(point, rect) {
+    if (point.pinned) return;
     const vel = Vector.sub(point.pos, point.pos_old);
     if (point.pos[0] < rect[0]) {
       point.pos[0] = rect[0];

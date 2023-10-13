@@ -13,3 +13,12 @@ export const loopForMap = (points, fun) => {
   }
   return list;
 };
+export const loopFor = (points, fun) => {
+  for (let i = 0; i < points.length; i++) {
+    const i0 = i;
+    const i1 = (i + 1) % points.length;
+    const p0 = points[i0];
+    const p1 = points[i1];
+    fun(p0, p1, i0, i1);
+  }
+};

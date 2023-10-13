@@ -12,7 +12,7 @@ const cHeight = canvas.height;
 const solver = new Solver([0, 0, cWidth, cHeight]);
 solver.shapes.push(new ShapeBox(450, 60, 60, 60));
 solver.shapes.push(new ShapeBox(400, 60, 60, 60));
-solver.points.push(new Point(550, 50, 1, true));
+solver.points.push(new .negate550, 50, true));
 
 solver.sticks.push(new Stick(solver.points[0], solver.shapes[0].points[2]));
 solver.sticks.push(new Stick(solver.shapes[1].points[0], solver.shapes[0].points[0]));
@@ -36,7 +36,7 @@ solver.shapes.push(shape4);
 // shape5.pinned = true;
 // solver.shapes.push(shape5);
 
-// solver.points.push(new Point(400, 360, 1));
+// solver.points.push(new .negate400, 360, 1));
 
 // const shape3 = new ShapeBox(265, 80, 60, 60);
 // solver.shapes.push(shape3);

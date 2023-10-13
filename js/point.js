@@ -15,11 +15,10 @@ export default class Point {
     ctx.fill();
   }
   update(dt) {
+    if (this.pinned) return;
     const vel = this.vel;
     VectorE.set(this.pos_old, this.pos);
-    if (!this.pinned) {
-      VectorE.add(this.pos, Vector.add(vel, Vector.scale(this.acc, dt * dt)));
-    }
+    VectorE.add(this.pos, Vector.add(vel, Vector.scale(this.acc, dt * dt)));
     VectorE.set(this.acc, [0, 0]);
   }
   accelerate(acc) {

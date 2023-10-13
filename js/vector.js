@@ -1,4 +1,8 @@
+import { Float } from "./float.js";
 export class Vector {
+  static zero() {
+    return [0, 0];
+  }
   static clone(vector) {
     return [...vector];
   }
@@ -132,6 +136,10 @@ export class Vector {
       VectorE.scale(sum, 1 / vectors.length);
     }
     return sum;
+  }
+  static nearlyEqual(vector0, vector1) {
+    const v = Vector.sub(vector0, vector1);
+    return Vector.dot(v, v) < Float.verySmallAmount * Float.verySmallAmount;
   }
 }
 export class VectorE {
