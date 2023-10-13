@@ -203,13 +203,15 @@ export class Shape {
       this.points.forEach((point) => {
         if (point.pinned) return;
         const d = Line.toLineDistance(point.pos, cp, Vector.add(cp, tangent), true);
-        const move = 1 + (d - depth) / projectionAwidth;
+        const rate = 1 + (d - depth) / projectionAwidth;
+        const move = Float.mix(1, this.restitution, rate);
         VectorE.sub(point.pos, Vector.scale(normal, move * depth * 0.5));
       });
       shape.points.forEach((point) => {
         if (point.pinned) return;
         const d = Line.toLineDistance(point.pos, cp, Vector.add(cp, tangent), true);
-        const move = 1 - (d + depth) / projectionBwidth;
+        const rate = 1 - (d + depth) / projectionBwidth;
+        const move = Float.mix(1, this.restitution, rate);
         VectorE.add(point.pos, Vector.scale(normal, move * depth * 0.5));
       });
 

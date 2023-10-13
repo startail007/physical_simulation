@@ -46,7 +46,7 @@ solver.shapes.push(shape4);
 // shape2.clearVel();
 // solver.shapes.push(shape2);
 
-solver.obstacles.push(new Obstacle([0, 500], [800, 150]));
+solver.obstacles.push(new Obstacle([0, 500], [800, 350]));
 
 // {
 //   const shape0 = new ShapeBox(400, 500, 100, 100);
@@ -75,6 +75,9 @@ solver.obstacles.push(new Obstacle([0, 500], [800, 150]));
 const mPos = [0, 0];
 canvas.addEventListener("mousemove", (ev) => {
   VectorE.set(mPos, [ev.offsetX, ev.offsetY]);
+});
+canvas.addEventListener("click", (ev) => {
+  solver.shapes.push(new ShapeBox(ev.offsetX, ev.offsetY, 60, 60));
 });
 let oldTime = Date.now();
 const animate = () => {
