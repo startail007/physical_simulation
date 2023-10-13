@@ -10,19 +10,20 @@ const cWidth = canvas.width;
 const cHeight = canvas.height;
 
 const solver = new Solver([0, 0, cWidth, cHeight]);
+solver.shapes.push(new ShapeBox(500, 60, 60, 60));
 solver.shapes.push(new ShapeBox(450, 60, 60, 60));
-solver.shapes.push(new ShapeBox(400, 60, 60, 60));
-solver.points.push(new Point(550, 50, 1, true));
+solver.points.push(new Point(600, 50, 1, true));
 
 solver.sticks.push(new Stick(solver.points[0], solver.shapes[0].points[2]));
 solver.sticks.push(new Stick(solver.shapes[1].points[0], solver.shapes[0].points[0]));
 
-const shape2 = new ShapeBox(200, 80, 60, 60);
+const shape2 = new ShapeBox(200, 180, 60, 60);
+shape2.pinned = true;
 // shape2.rotate(Math.PI * 0.25);
 // shape2.clearVel();
 solver.shapes.push(shape2);
 
-const shape3 = new ShapeBox(500, 180, 60, 60);
+const shape3 = new ShapeBox(300, 180, 60, 60);
 shape3.rotate(-Math.PI * 0.5);
 // shape3.clearVel();
 solver.shapes.push(shape3);
@@ -31,10 +32,6 @@ const shape4 = new ShapeBox(650, 180, 60, 60);
 shape4.rotate(-Math.PI * 0.5);
 shape4.clearVel();
 solver.shapes.push(shape4);
-
-// const shape5 = new ShapeBox(400, 600, 200, 100);
-// shape5.pinned = true;
-// solver.shapes.push(shape5);
 
 // solver.points.push(new Point(400, 360, 1));
 

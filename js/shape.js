@@ -191,28 +191,73 @@ export class Shape {
       const { normal, depth } = info;
       const tangent = Vector.normal(normal);
       const contactList = Shape.findPolygonsContactPoints(pointsA, pointsB);
+      const contactCount = contactList.length;
       const cp = Vector.average(contactList);
 
-      const vel0 = Vector.average(this.points.map((point) => point.vel));
-      const vel1 = Vector.average(shape.points.map((point) => point.vel));
+      const projectionNA = Shape.projectPoints(pointsA, normal);
+      const projectionNAwidth = projectionNA.max - projectionNA.min;
+      const projectionNB = Shape.projectPoints(pointsB, normal);
+      const projectionNBwidth = projectionNB.max - projectionNB.min;
 
-      const projectionA = Shape.projectPoints(pointsA, normal);
-      const projectionAwidth = projectionA.max - projectionA.min;
-      const projectionB = Shape.projectPoints(pointsB, normal);
-      const projectionBwidth = projectionB.max - projectionB.min;
-      this.points.forEach((point) => {
-        if (point.pinned) return;
-        const d = Line.toLineDistance(point.pos, cp, Vector.add(cp, tangent), true);
-        const rate = 1 + (d - depth) / projectionAwidth;
-        const move = Float.mix(1, this.restitution, rate);
-        VectorE.sub(point.pos, Vector.scale(normal, move * depth * 0.5));
-      });
-      shape.points.forEach((point) => {
-        if (point.pinned) return;
-        const d = Line.toLineDistance(point.pos, cp, Vector.add(cp, tangent), true);
-        const rate = 1 - (d + depth) / projectionBwidth;
-        const move = Float.mix(1, this.restitution, rate);
-        VectorE.add(point.pos, Vector.scale(normal, move * depth * 0.5));
+      const projectionTA = Shape.projectPoints(pointsA, tangent);
+      const projectionTAwidth = projectionTA.max - projectionTA.min;
+      const projectionTB = Shape.projectPoints(pointsB, tangent);
+      const projectionTBwidth = projectionTB.max - projectionTB.min;
+      // contactList.forEach((contact) => {
+      //   if (!this.pinned) {
+      //     this.points.forEach((point) => {
+      //       const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+      //       const rate = 1 + (d - depth) / projectionNAwidth;
+
+      //       const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+      //       const rate0 = Math.max(1 - (2 * d0) / projectionTAwidth, 0);
+
+      //       const move = Float.mix(1, this.restitution, rate * rate0);
+      //       VectorE.sub(point.pos, Vector.scale(normal, (move * depth * 0.5) / contactCount));
+      //     });
+      //   }
+      //   if (!shape.pinned) {
+      //     shape.points.forEach((point) => {
+      //       const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+      //       const rate = 1 - (d + depth) / projectionNBwidth;
+
+      //       const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+      //       const rate0 = Math.max(1 - (2 * d0) / projectionTBwidth, 0);
+
+      //       const move = Float.mix(1, this.restitution, rate * rate0);
+      //       VectorE.add(point.pos, Vector.scale(normal, (move * depth * 0.5) / contactCount));
+      //     });
+      //   }
+      // });
+      const velA = this.points.map((point) => point.vel);
+      const velB = shape.points.map((point) => point.vel);
+      const vel0 = Vector.average(velA);
+      const vel1 = Vector.average(velB);
+      contactList.forEach((contact) => {
+        if (!this.pinned) {
+          this.points.forEach((point) => {
+            const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+            const rate = 1 + (d - depth) / projectionNAwidth;
+
+            const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+            const rate0 = d0 / projectionTAwidth;
+
+            const move = Float.mix(1, this.restitution, rate * rate0);
+            VectorE.sub(point.pos, Vector.scale(normal, (move * depth * 0.5) / contactCount));
+          });
+        }
+        if (!shape.pinned) {
+          shape.points.forEach((point) => {
+            const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+            const rate = 1 - (d + depth) / projectionNBwidth;
+
+            const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+            const rate0 = d0 / projectionTBwidth;
+
+            const move = Float.mix(1, this.restitution, rate * rate0);
+            VectorE.add(point.pos, Vector.scale(normal, (move * depth * 0.5) / contactCount));
+          });
+        }
       });
 
       const relativeVel = Vector.sub(vel0, vel1);
@@ -223,14 +268,62 @@ export class Shape {
 
       const j = (-(1 + e) * Vector.dot(relativeVel, normal)) / (this.invMass + shape.invMass);
       const impulse = Vector.scale(normal, j);
-      VectorE.sub(vel0, Vector.scale(impulse, this.invMass));
-      VectorE.add(vel1, Vector.scale(impulse, shape.invMass));
+      const _vel0 = Vector.scale(impulse, this.invMass);
+      const _vel1 = Vector.scale(impulse, shape.invMass);
 
-      this.points.forEach((point) => {
-        VectorE.set(point.pos_old, Vector.sub(point.pos, vel0));
-      });
-      shape.points.forEach((point) => {
-        VectorE.set(point.pos_old, Vector.sub(point.pos, vel1));
+      // contactList.forEach((contact) => {
+      //   this.points.forEach((point) => {
+      //     // const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+      //     // const rate = 1 + (d - depth) / projectionNAwidth;
+
+      //     // const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+      //     // const rate0 = d0 / projectionTAwidth;
+
+      //     // const move = Float.mix(1, this.restitution, rate * rate0);
+      //     VectorE.set(point.pos_old, Vector.sub(point.pos, Vector.sub(point.vel, _vel0)));
+      //   });
+      //   shape.points.forEach((point) => {
+      //     // const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+      //     // const rate = 1 - (d + depth) / projectionNBwidth;
+
+      //     // const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+      //     // const rate0 = d0 / projectionTBwidth;
+
+      //     // const move = Float.mix(1, this.restitution, rate * rate0);
+      //     VectorE.set(point.pos_old, Vector.sub(point.pos, Vector.add(point.vel, _vel1)));
+      //   });
+      // });
+
+      contactList.forEach((contact) => {
+        if (!this.pinned) {
+          this.points.forEach((point, i) => {
+            const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+            const rate = 1 + (d - depth) / projectionNAwidth;
+
+            const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+            const rate0 = d0 / projectionTAwidth;
+            const move = Float.mix(1, this.restitution, rate * rate0);
+            VectorE.set(
+              point.pos_old,
+              Vector.sub(point.pos, Vector.sub(velA[i], Vector.scale(_vel0, move / contactCount)))
+            );
+          });
+        }
+        if (!shape.pinned) {
+          shape.points.forEach((point, i) => {
+            const d = Line.toLineDistance(point.pos, contact, Vector.add(contact, tangent), true);
+            const rate = 1 - (d + depth) / projectionNBwidth;
+
+            const d0 = Line.toLineDistance(point.pos, contact, Vector.add(contact, normal));
+            const rate0 = d0 / projectionTBwidth;
+
+            const move = Float.mix(1, this.restitution, rate * rate0);
+            VectorE.set(
+              point.pos_old,
+              Vector.sub(point.pos, Vector.add(velB[i], Vector.scale(_vel1, move / contactCount)))
+            );
+          });
+        }
       });
     }
   }

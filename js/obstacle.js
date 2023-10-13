@@ -8,6 +8,7 @@ export default class Obstacle {
   }
   update(points) {
     points.forEach((point) => {
+      if (point.pinned) return;
       const vel = point.vel;
       const v0 = Vector.sub(point.pos, this.A);
       const v1 = Vector.sub(this.B, this.A);
