@@ -229,12 +229,16 @@ export class Line {
     return { pos: point0, dir: Vector.sub(point1, point0) };
   }
   static toLineDistance(point, point0, point1, pn = false) {
+    // const v = Vector.sub(point1, point0);
+    // const a = v[1];
+    // const b = -v[0];
+    // const c = -point0[0] * v[1] + v[0] * point0[1];
+    // const ans = (point[0] * a + point[1] * b + c) / Vector.length(v);
+    // return pn ? ans : Math.abs(ans);
     const v = Vector.sub(point1, point0);
-    const a = v[1];
-    const b = -v[0];
-    const c = -point0[0] * v[1] + v[0] * point0[1];
-    const ans = (point[0] * a + point[1] * b + c) / Vector.length(v);
-    return pn ? ans : Math.abs(ans);
+    const v0 = Vector.sub(point, point0);
+    const dist = Vector.cross(v0, v) / Vector.length(v);
+    return pn ? dist : Math.abs(dist);
   }
   static shortestDistancePointToLine(point, point0, point1) {
     const { a, b, c } = Line.getLineABC(point0, point1);
