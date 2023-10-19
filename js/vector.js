@@ -121,8 +121,8 @@ export class Vector {
   static mix(vector0, vector1, rate) {
     return Vector.add(Vector.scale(vector0, 1 - rate), Vector.scale(vector1, rate));
   }
-  static rebound(vel, well) {
-    const projection = Vector.projection(vel, well);
+  static rebound(vel, wall) {
+    const projection = Vector.projection(vel, wall);
     const force = Vector.sub(vel, projection);
 
     return Vector.add(Vector.negate(force), projection);
